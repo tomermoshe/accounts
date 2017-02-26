@@ -273,7 +273,7 @@ const Accounts = {
   logout(callback: ?Function): Promise<void> {
     return this.instance.logout(callback);
   },
-  tokens(): TokensType {
+  tokens(): Promise<TokensType> {
     return this.instance.tokens();
   },
   resumeSession(): Promise<void> {
