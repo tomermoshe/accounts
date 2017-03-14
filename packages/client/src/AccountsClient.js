@@ -172,9 +172,13 @@ export class AccountsClient {
     }
 
     try {
+      const { onUserCreated } = this.options;
       const userId = await this.transport.createUser(user);
       if (callback && isFunction(callback)) {
         callback();
+      }
+      if (isFunction(onUserCreated)) {
+        await onUserCreated({ id: userId });
       }
       await this.loginWithPassword({ id: userId }, user.password);
     } catch (err) {

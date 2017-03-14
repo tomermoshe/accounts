@@ -17,7 +17,8 @@ export type AccountsCommonConfiguration = {
   passwordSignupFields?: PasswordSignupFields,
   minimumPasswordLength?: number,
   path?: string,
-  passwordHashAlgorithm?: HashAlgorithm
+  passwordHashAlgorithm?: HashAlgorithm,
+  onUserCreated?: (user: ?Object) => Promise<any>
 };
 
 export default ({

@@ -1,6 +1,6 @@
 // @flow
 
-import { isString, isPlainObject, find, includes, get } from 'lodash';
+import { isString, isPlainObject, isFunction, find, includes, get } from 'lodash';
 import jwt from 'jsonwebtoken';
 import {
   AccountsError,
@@ -60,9 +60,9 @@ export class AccountsServer {
 
   /**
    * @description Return the AccountsServer options.
-   * @returns {Object} - Return the options.
+   * @returns {AccountsServerConfiguration} - Return the options.
    */
-  options(): Object {
+  options(): AccountsServerConfiguration {
     return this._options;
   }
 
@@ -176,13 +176,30 @@ export class AccountsServer {
       throw new AccountsError('Email already exists', { email: user.email });
     }
 
-    // TODO Accounts.onCreateUser
-    const userId: string = await this.db.createUser({
+    const { validateNewUser, onUserCreated } = this.options();
+
+    const proposedUserObject = {
       username: user.username,
       email: user.email && user.email.toLowerCase(),
       password: user.password,
       profile: user.profile,
-    });
+    };
+
+    let userIsValid = true;
+    if (isFunction(validateNewUser)) {
+      userIsValid = await validateNewUser(proposedUserObject);
+    }
+
+    if (!userIsValid) {
+      throw new AccountsError('User did not pass validation');
+    }
+
+    const userId: string = await this.db.createUser(proposedUserObject);
+
+    if (isFunction(onUserCreated)) {
+      const createdUser = await this.findUserById(userId);
+      await onUserCreated(createdUser);
+    }
 
     return userId;
   }
